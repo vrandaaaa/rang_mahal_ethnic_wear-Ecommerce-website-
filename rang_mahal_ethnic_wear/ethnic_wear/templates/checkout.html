@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Checkout — Rang Mahal{% endblock %}
+{% block content %}
+<div class="page-header-slim">
+    <div class="container">
+        <h1>Checkout</h1>
+        <div class="breadcrumb"><a href="{{ url_for('home') }}">Home</a> <span>/</span> <a href="{{ url_for('cart') }}">Cart</a> <span>/</span> <span>Checkout</span></div>
+    </div>
+</div>
+<div class="container checkout-layout">
+    <form action="{{ url_for('checkout') }}" method="POST" class="checkout-form">
+
+        <!-- Shipping Details -->
+        <div class="checkout-main">
+            <div class="checkout-section">
+                <h2><span class="step-num">1</span> Shipping Details</h2>
+                <div class="form-grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Full Name *</label>
+                        <input type="text" name="full_name" required class="form-input" value="{{ user.name }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone Number *</label>
+                        <input type="tel" name="phone" required class="form-input" value="{{ user.phone or '' }}" placeholder="+91 XXXXX XXXXX">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address *</label>
+                    <textarea name="address" required class="form-input" rows="2" placeholder="House/Flat No., Street, Area">{{ user.address or '' }}</textarea>
+                </div>
+                <div class="form-grid-3">
+                    <div class="form-group">
+                        <label class="form-label">City *</label>
+                        <input type="text" name="city" required class="form-input" placeholder="City">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">State *</label>
+                        <select name="state" required class="form-input">
+                            <option value="">Select State</option>
+                            {% for state in ['Andhra Pradesh','Assam','Bihar','Delhi','Goa','Gujarat','Haryana','Himachal Pradesh','Jammu & Kashmir','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Manipur','Meghalaya','Nagaland','Odisha','Punjab','Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh','Uttarakhand','West Bengal'] %}
+                            <option value="{{ state }}">{{ state }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">PIN Code *</label>
+                        <input type="text" name="pincode" required class="form-input" pattern="[0-9]{6}" placeholder="6-digit PIN">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="checkout-section">
+                <h2><span class="step-num">2</span> Payment Method</h2>
+                <div class="payment-options">
+                    <label class="payment-option active" id="payCard">
+                        <input type="radio" name="payment_method" value="card" checked>
+                        <div class="payment-icon"><i class="far fa-credit-card"></i></div>
+                        <div><strong>Credit / Debit Card</strong><p>Visa, Mastercard, Amex</p></div>
+                    </label>
+                    <label class="payment-option" id="payUPI">
+                        <input type="radio" name="payment_method" value="upi">
+                        <div class="payment-icon"><i class="fas fa-mobile-alt"></i></div>
+                        <div><strong>UPI / Net Banking</strong><p>GPay, PhonePe, Paytm</p></div>
+                    </label>
+                    <label class="payment-option" id="payCOD">
+                        <input type="radio" name="payment_method" value="cod">
+                        <div class="payment-icon"><i class="fas fa-wallet"></i></div>
+                        <div><strong>Cash on Delivery</strong><p>Pay when you receive</p></div>
+                    </label>
+                </div>
+
+                <!-- Mock Card Form -->
+                <div class="card-form" id="cardForm">
+                    <div class="form-group">
+                        <label class="form-label">Card Number</label>
+                        <input type="text" class="form-input" placeholder="4242 4242 4242 4242" maxlength="19" oninput="formatCard(this)">
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">Expiry Date</label>
+                            <input type="text" class="form-input" placeholder="MM/YY" maxlength="5">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">CVV</label>
+                            <input type="password" class="form-input" placeholder="•••" maxlength="3">
+                        </div>
+                    </div>
+                    <!-- Simulate outcome -->
+                    <div class="simulate-wrap">
+                        <label class="form-label">Simulate Payment:</label>
+                        <div class="simulate-btns">
+                            <label class="simulate-opt success-opt">
+                                <input type="radio" name="simulate" value="success" checked>
+                                <span>✓ Success</span>
+                            </label>
+                            <label class="simulate-opt failure-opt">
+                                <input type="radio" name="simulate" value="failure">
+                                <span>✗ Failure</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary Sidebar -->
+        <div class="checkout-sidebar">
+            <div class="summary-card">
+                <h3>Order Summary</h3>
+                {% for item in items %}
+                <div class="checkout-item">
+                    <div class="checkout-item-info">
+                        <span class="checkout-item-name">{{ item.product.name }}</span>
+                        <span class="checkout-item-meta">
+                            {% if item.size %}{{ item.size }}{% endif %}
+                            {% if item.color %} · {{ item.color }}{% endif %}
+                            × {{ item.quantity }}
+                        </span>
+                    </div>
+                    <span class="checkout-item-price">₹{{ "%.0f"|format(item.subtotal) }}</span>
+                </div>
+                {% endfor %}
+                <div class="summary-divider"></div>
+                <div class="summary-row"><span>Subtotal</span><span>₹{{ "%.0f"|format(total) }}</span></div>
+                <div class="summary-row"><span>Shipping</span><span>{{ 'FREE' if total >= 999 else '₹99' }}</span></div>
+                <div class="summary-divider"></div>
+                <div class="summary-row summary-total">
+                    <span>Total</span>
+                    <span>₹{{ "%.0f"|format(total + (0 if total >= 999 else 99)) }}</span>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full btn-lg">
+                    <i class="fas fa-lock"></i> Place Order
+                </button>
+                <p class="secure-note"><i class="fas fa-shield-alt"></i> 100% Secure &amp; Encrypted</p>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+// Payment method UI toggle
+document.querySelectorAll('.payment-option input[type="radio"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+        document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
+        radio.closest('.payment-option').classList.add('active');
+        document.getElementById('cardForm').style.display = radio.value === 'card' ? 'block' : 'none';
+    });
+});
+
+function formatCard(input) {
+    let val = input.value.replace(/\D/g, '').substring(0, 16);
+    input.value = val.replace(/(.{4})/g, '$1 ').trim();
+}
+</script>
+{% endblock %}

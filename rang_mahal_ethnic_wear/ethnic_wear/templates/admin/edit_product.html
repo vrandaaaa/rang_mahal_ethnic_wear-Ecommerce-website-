@@ -1,0 +1,145 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Edit Product — Admin{% endblock %}
+{% block page_title %}Edit Product{% endblock %}
+{% block content %}
+
+<div class="admin-card">
+    <form action="{{ url_for('admin_edit_product', product_id=product.id) }}" method="POST" enctype="multipart/form-data" class="admin-form">
+
+        <div class="form-grid-2">
+            <div class="form-group">
+                <label class="form-label">Product Name *</label>
+                <input type="text" name="name" required class="form-input" value="{{ product.name }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Category *</label>
+                <select name="category" required class="form-input">
+                    {% for cat in categories %}
+                    <option value="{{ cat }}" {% if product.category == cat %}selected{% endif %}>{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-input" rows="4">{{ product.description }}</textarea>
+        </div>
+
+        <div class="form-grid-3">
+            <div class="form-group">
+                <label class="form-label">Selling Price (₹) *</label>
+                <input type="number" name="price" required min="0" step="0.01" class="form-input" value="{{ product.price }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Original Price (₹)</label>
+                <input type="number" name="original_price" min="0" step="0.01" class="form-input" value="{{ product.original_price or '' }}">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Stock Quantity *</label>
+                <input type="number" name="stock" required min="0" class="form-input" value="{{ product.stock }}">
+            </div>
+        </div>
+
+        <!-- Sizes -->
+        <div class="form-group">
+            <label class="form-label">Available Sizes</label>
+            <div class="checkbox-grid">
+                {% for size in sizes %}
+                <label class="checkbox-chip">
+                    <input type="checkbox" name="sizes" value="{{ size }}"
+                           {% if size in product.sizes_list %}checked{% endif %}>
+                    <span>{{ size }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Colors -->
+        <div class="form-group">
+            <label class="form-label">Available Colors</label>
+            <div class="checkbox-grid">
+                {% set color_map = {'Red':'#c0392b','Pink':'#e91e8c','Blue':'#2980b9','Green':'#27ae60','Yellow':'#f1c40f','Orange':'#e67e22','Purple':'#8e44ad','White':'#f5f5f5','Black':'#2c2c2c','Gold':'#d4a017','Maroon':'#800000','Teal':'#008080'} %}
+                {% for color in colors %}
+                <label class="checkbox-chip color-checkbox-chip">
+                    <input type="checkbox" name="colors" value="{{ color }}"
+                           {% if color in product.colors_list %}checked{% endif %}>
+                    <span class="color-swatch-sm" style="background:{{ color_map.get(color,'#999') }}"></span>
+                    <span>{{ color }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Current Images -->
+        {% if product.images_list %}
+        <div class="form-group">
+            <label class="form-label">Current Images</label>
+            <div class="current-images-grid">
+                {% for img in product.images_list %}
+                <div class="current-img-thumb">
+                    <img src="{{ url_for('static', filename=img.replace('/static/', '')) }}"
+                         onerror="this.src='/static/images/placeholder.svg'" alt="Product image">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Add More Images -->
+        <div class="form-group">
+            <label class="form-label">Add More Images</label>
+            <div class="image-upload-area">
+                <input type="file" name="images" multiple accept="image/*" id="imageInput2" style="display:none"
+                       onchange="previewImages(this)">
+                <div class="upload-placeholder" onclick="document.getElementById('imageInput2').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to upload new images</p>
+                    <small>These will be added to existing images</small>
+                </div>
+                <div class="image-previews" id="imagePreviews2"></div>
+            </div>
+        </div>
+
+        <!-- Toggles -->
+        <div class="form-group toggles-row">
+            <label class="toggle-label">
+                <input type="checkbox" name="is_featured" {% if product.is_featured %}checked{% endif %}>
+                <span class="toggle-switch"></span>
+                <span>Featured Product</span>
+            </label>
+            <label class="toggle-label">
+                <input type="checkbox" name="is_active" {% if product.is_active %}checked{% endif %}>
+                <span class="toggle-switch"></span>
+                <span>Active (visible in store)</span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('admin_products') }}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+function previewImages(input) {
+    const container = document.getElementById('imagePreviews2');
+    container.innerHTML = '';
+    Array.from(input.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const div = document.createElement('div');
+            div.className = 'preview-thumb';
+            div.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+            container.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Dashboard — Admin{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+
+<!-- Stats Cards -->
+<div class="admin-stats-grid">
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#fce4ec"><i class="fas fa-box" style="color:#e91e8c"></i></div>
+        <div class="stat-card-info">
+            <div class="stat-card-num">{{ total_products }}</div>
+            <div class="stat-card-label">Total Products</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#e8f5e9"><i class="fas fa-shopping-bag" style="color:#2e7d32"></i></div>
+        <div class="stat-card-info">
+            <div class="stat-card-num">{{ total_orders }}</div>
+            <div class="stat-card-label">Total Orders</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#e3f2fd"><i class="fas fa-users" style="color:#1565c0"></i></div>
+        <div class="stat-card-info">
+            <div class="stat-card-num">{{ total_users }}</div>
+            <div class="stat-card-label">Registered Users</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-icon" style="background:#fff8e1"><i class="fas fa-rupee-sign" style="color:#f57f17"></i></div>
+        <div class="stat-card-info">
+            <div class="stat-card-num">₹{{ "%.0f"|format(total_revenue) }}</div>
+            <div class="stat-card-label">Total Revenue</div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <h3>Recent Orders</h3>
+        <a href="{{ url_for('admin_orders') }}" class="btn btn-sm btn-outline">View All</a>
+    </div>
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr><th>Order #</th><th>Customer</th><th>Amount</th><th>Status</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+                {% for order in recent_orders %}
+                <tr>
+                    <td><strong>{{ order.order_number }}</strong></td>
+                    <td>{{ order.user_name }}</td>
+                    <td>₹{{ "%.0f"|format(order.total_amount) }}</td>
+                    <td><span class="status-badge status-{{ order.status }}">{{ order.status|title }}</span></td>
+                    <td>{{ order.created_at | fmtdate }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="no-data">No orders yet</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

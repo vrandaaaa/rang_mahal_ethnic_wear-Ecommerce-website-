@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block title %}Shop — Rang Mahal{% endblock %}
+
+{% block content %}
+<div class="page-header-slim">
+    <div class="container">
+        <h1>{{ selected_category if selected_category else 'All Products' }}</h1>
+        <div class="breadcrumb">
+            <a href="{{ url_for('home') }}">Home</a> <span>/</span>
+            <span>{{ selected_category if selected_category else 'All Products' }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="shop-layout container">
+
+    <!-- ── Sidebar Filters ── -->
+    <aside class="filters-sidebar" id="filtersSidebar">
+        <div class="filters-header">
+            <h3>Filters</h3>
+            <a href="{{ url_for('products') }}" class="clear-filters">Clear All</a>
+        </div>
+
+        <form id="filtersForm" method="GET" action="{{ url_for('products') }}">
+            {% if search %}<input type="hidden" name="search" value="{{ search }}">{% endif %}
+
+            <!-- Category -->
+            <div class="filter-group">
+                <h4 class="filter-title">Category</h4>
+                <div class="filter-options">
+                    <label class="filter-option {% if not selected_category %}active{% endif %}">
+                        <input type="radio" name="category" value="" {% if not selected_category %}checked{% endif %}>
+                        <span>All Categories</span>
+                    </label>
+                    {% for cat in categories %}
+                    <label class="filter-option {% if selected_category == cat %}active{% endif %}">
+                        <input type="radio" name="category" value="{{ cat }}" {% if selected_category == cat %}checked{% endif %}>
+                        <span>{{ cat }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Price Range -->
+            <div class="filter-group">
+                <h4 class="filter-title">Price Range</h4>
+                <div class="price-range-wrap">
+                    <div class="price-inputs">
+                        <input type="number" name="min_price" value="{{ min_price }}" placeholder="Min" class="price-input" min="0">
+                        <span>—</span>
+                        <input type="number" name="max_price" value="{{ max_price if max_price < 100000 else '' }}" placeholder="Max" class="price-input" min="0">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Size -->
+            <div class="filter-group">
+                <h4 class="filter-title">Size</h4>
+                <div class="size-filter-grid">
+                    {% for s in sizes %}
+                    <label class="size-option {% if selected_size == s %}active{% endif %}">
+                        <input type="radio" name="size" value="{{ s }}" {% if selected_size == s %}checked{% endif %}>
+                        <span>{{ s }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Color -->
+            <div class="filter-group">
+                <h4 class="filter-title">Color</h4>
+                <div class="color-filter-grid">
+                    {% set color_map = {'Red':'#c0392b','Pink':'#e91e8c','Blue':'#2980b9','Green':'#27ae60','Yellow':'#f1c40f','Orange':'#e67e22','Purple':'#8e44ad','White':'#f5f5f5','Black':'#2c2c2c','Gold':'#d4a017','Maroon':'#800000','Teal':'#008080'} %}
+                    {% for c in colors %}
+                    <label class="color-option {% if selected_color == c %}active{% endif %}" title="{{ c }}">
+                        <input type="radio" name="color" value="{{ c }}" {% if selected_color == c %}checked{% endif %}>
+                        <span class="color-swatch" style="background:{{ color_map.get(c, '#999') }}"></span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-full">Apply Filters</button>
+        </form>
+    </aside>
+
+    <!-- ── Products Main ── -->
+    <div class="products-main">
+
+        <!-- Toolbar -->
+        <div class="products-toolbar">
+            <div class="toolbar-left">
+                {% if search %}
+                <span class="results-text">Results for "<strong>{{ search }}</strong>" — {{ products.total }} items</span>
+                {% else %}
+                <span class="results-text">{{ products.total }} Products</span>
+                {% endif %}
+            </div>
+            <div class="toolbar-right">
+                <button class="filter-toggle-btn" id="filterToggle">
+                    <i class="fas fa-sliders-h"></i> Filters
+                </button>
+                <div class="sort-wrap">
+                    <select name="sort" id="sortSelect" class="sort-select" onchange="applySort(this.value)">
+                        <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Newest First</option>
+                        <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                    </select>
+                </div>
+                <div class="view-toggle">
+                    <button class="view-btn active" id="gridView" title="Grid View"><i class="fas fa-th"></i></button>
+                    <button class="view-btn" id="listView" title="List View"><i class="fas fa-list"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Grid -->
+        {% if products.product_list %}
+        <div class="product-grid" id="productsGrid">
+            {% for product in products.product_list %}
+            <div class="product-card">
+                <div class="product-img-wrap">
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}">
+                        {% if product.images_list %}
+                        <img src="{{ url_for('static', filename=product.images_list[0].replace('/static/', '')) }}"
+                             alt="{{ product.name }}" class="product-img"
+                             onerror="this.src='/static/images/placeholder.svg'">
+                        {% else %}
+                        <img src="/static/images/placeholder.svg" alt="{{ product.name }}" class="product-img">
+                        {% endif %}
+                    </a>
+                    <div class="product-actions">
+                        {% if session.user_id %}
+                        <a href="{{ url_for('toggle_wishlist', product_id=product.id) }}" class="product-action-btn" title="Wishlist">
+                            <i class="fas fa-heart"></i>
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-action-btn" title="View">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </div>
+                    {% if product.original_price and product.original_price > product.price %}
+                    <div class="product-badge">{{ ((1 - product.price/product.original_price)*100)|int }}% OFF</div>
+                    {% endif %}
+                    {% if product.stock == 0 %}
+                    <div class="product-badge product-badge-oos">Sold Out</div>
+                    {% endif %}
+                </div>
+                <div class="product-info">
+                    <div class="product-category">{{ product.category }}</div>
+                    <h3 class="product-name">
+                        <a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.name }}</a>
+                    </h3>
+                    <div class="product-rating">
+                        {% set rating = product.avg_rating %}
+                        {% for i in range(1, 6) %}
+                        <i class="fas fa-star {% if i <= rating %}star-filled{% else %}star-empty{% endif %}"></i>
+                        {% endfor %}
+                        <span class="rating-count">({{ product.reviews|length }})</span>
+                    </div>
+                    <div class="product-price">
+                        <span class="price-current">₹{{ "%.0f"|format(product.price) }}</span>
+                        {% if product.original_price and product.original_price > product.price %}
+                        <span class="price-original">₹{{ "%.0f"|format(product.original_price) }}</span>
+                        {% endif %}
+                    </div>
+                    <form action="{{ url_for('add_to_cart') }}" method="POST" class="quick-add-form">
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" class="btn btn-add-cart" {% if product.stock == 0 %}disabled{% endif %}>
+                            {% if product.stock == 0 %}
+                            Out of Stock
+                            {% else %}
+                            <i class="fas fa-shopping-bag"></i> Add to Cart
+                            {% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if products.pages > 1 %}
+        <div class="pagination">
+            {% if products.has_prev %}
+            <a href="{{ url_for('products', page=products.prev_num, category=selected_category, search=search, sort=sort) }}" class="page-btn">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+            {% endif %}
+            {% for p in products.iter_pages() %}
+                {% if p %}
+                <a href="{{ url_for('products', page=p, category=selected_category, search=search, sort=sort) }}"
+                   class="page-btn {% if p == products.page %}active{% endif %}">{{ p }}</a>
+                {% else %}
+                <span class="page-ellipsis">…</span>
+                {% endif %}
+            {% endfor %}
+            {% if products.has_next %}
+            <a href="{{ url_for('products', page=products.next_num, category=selected_category, search=search, sort=sort) }}" class="page-btn">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-search"></i>
+            <h3>No products found</h3>
+            <p>Try adjusting your filters or search term.</p>
+            <a href="{{ url_for('products') }}" class="btn btn-primary">Clear Filters</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filter Overlay -->
+<div class="filter-overlay" id="filterOverlay"></div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function applySort(val) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('sort', val);
+    window.location.href = url.toString();
+}
+
+// Filter toggle for mobile
+document.getElementById('filterToggle')?.addEventListener('click', () => {
+    document.getElementById('filtersSidebar').classList.add('open');
+    document.getElementById('filterOverlay').classList.add('show');
+});
+document.getElementById('filterOverlay')?.addEventListener('click', () => {
+    document.getElementById('filtersSidebar').classList.remove('open');
+    document.getElementById('filterOverlay').classList.remove('show');
+});
+
+// Auto-submit on radio change
+document.querySelectorAll('#filtersForm input[type="radio"]').forEach(el => {
+    el.addEventListener('change', () => document.getElementById('filtersForm').submit());
+});
+
+// View toggle
+document.getElementById('gridView')?.addEventListener('click', function() {
+    this.classList.add('active');
+    document.getElementById('listView').classList.remove('active');
+    document.getElementById('productsGrid').classList.remove('list-view');
+});
+document.getElementById('listView')?.addEventListener('click', function() {
+    this.classList.add('active');
+    document.getElementById('gridView').classList.remove('active');
+    document.getElementById('productsGrid').classList.add('list-view');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,128 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Add Product — Admin{% endblock %}
+{% block page_title %}Add New Product{% endblock %}
+{% block content %}
+
+<div class="admin-card">
+    <form action="{{ url_for('admin_add_product') }}" method="POST" enctype="multipart/form-data" class="admin-form">
+
+        <div class="form-grid-2">
+            <div class="form-group">
+                <label class="form-label">Product Name *</label>
+                <input type="text" name="name" required class="form-input" placeholder="e.g. Floral Print Kurti">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Category *</label>
+                <select name="category" required class="form-input">
+                    <option value="">Select Category</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea name="description" class="form-input" rows="4"
+                      placeholder="Describe the product, fabric, occasion, care instructions..."></textarea>
+        </div>
+
+        <div class="form-grid-3">
+            <div class="form-group">
+                <label class="form-label">Selling Price (₹) *</label>
+                <input type="number" name="price" required min="0" step="0.01" class="form-input" placeholder="e.g. 999">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Original Price (₹)</label>
+                <input type="number" name="original_price" min="0" step="0.01" class="form-input" placeholder="e.g. 1499 (for discount)">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Stock Quantity *</label>
+                <input type="number" name="stock" required min="0" class="form-input" placeholder="e.g. 50">
+            </div>
+        </div>
+
+        <!-- Sizes -->
+        <div class="form-group">
+            <label class="form-label">Available Sizes</label>
+            <div class="checkbox-grid">
+                {% for size in sizes %}
+                <label class="checkbox-chip">
+                    <input type="checkbox" name="sizes" value="{{ size }}">
+                    <span>{{ size }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Colors -->
+        <div class="form-group">
+            <label class="form-label">Available Colors</label>
+            <div class="checkbox-grid">
+                {% set color_map = {'Red':'#c0392b','Pink':'#e91e8c','Blue':'#2980b9','Green':'#27ae60','Yellow':'#f1c40f','Orange':'#e67e22','Purple':'#8e44ad','White':'#f5f5f5','Black':'#2c2c2c','Gold':'#d4a017','Maroon':'#800000','Teal':'#008080'} %}
+                {% for color in colors %}
+                <label class="checkbox-chip color-checkbox-chip">
+                    <input type="checkbox" name="colors" value="{{ color }}">
+                    <span class="color-swatch-sm" style="background:{{ color_map.get(color,'#999') }}"></span>
+                    <span>{{ color }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Images -->
+        <div class="form-group">
+            <label class="form-label">Product Images</label>
+            <div class="image-upload-area" id="imageUploadArea">
+                <input type="file" name="images" multiple accept="image/*" id="imageInput" style="display:none"
+                       onchange="previewImages(this)">
+                <div class="upload-placeholder" onclick="document.getElementById('imageInput').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to upload images</p>
+                    <small>PNG, JPG, WEBP up to 16MB each</small>
+                </div>
+                <div class="image-previews" id="imagePreviews"></div>
+            </div>
+        </div>
+
+        <!-- Featured -->
+        <div class="form-group">
+            <label class="toggle-label">
+                <input type="checkbox" name="is_featured" id="isFeatured">
+                <span class="toggle-switch"></span>
+                <span>Mark as Featured Product</span>
+            </label>
+        </div>
+
+        <div class="form-actions">
+            <a href="{{ url_for('admin_products') }}" class="btn btn-outline">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Product
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+function previewImages(input) {
+    const container = document.getElementById('imagePreviews');
+    container.innerHTML = '';
+    Array.from(input.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const div = document.createElement('div');
+            div.className = 'preview-thumb';
+            div.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+            container.appendChild(div);
+        };
+        reader.readAsDataURL(file);
+    });
+    if (input.files.length > 0) {
+        document.querySelector('.upload-placeholder').style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

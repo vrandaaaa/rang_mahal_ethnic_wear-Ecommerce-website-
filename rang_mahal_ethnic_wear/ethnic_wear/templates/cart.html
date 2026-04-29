@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Shopping Cart — Rang Mahal{% endblock %}
+{% block content %}
+<div class="page-header-slim">
+    <div class="container">
+        <h1>Shopping Cart</h1>
+        <div class="breadcrumb"><a href="{{ url_for('home') }}">Home</a> <span>/</span> <span>Cart</span></div>
+    </div>
+</div>
+<div class="container cart-layout">
+    {% if items %}
+    <div class="cart-items">
+        <div class="cart-table-header">
+            <span>Product</span><span>Price</span><span>Quantity</span><span>Subtotal</span><span></span>
+        </div>
+        {% for item in items %}
+        <div class="cart-row">
+            <div class="cart-product">
+                {% if item.product.images_list %}
+                <img src="{{ url_for('static', filename=item.product.images_list[0].replace('/static/', '')) }}"
+                     alt="{{ item.product.name }}" onerror="this.src='/static/images/placeholder.svg'">
+                {% else %}
+                <img src="/static/images/placeholder.svg" alt="{{ item.product.name }}">
+                {% endif %}
+                <div class="cart-product-details">
+                    <a href="{{ url_for('product_detail', product_id=item.product.id) }}" class="cart-product-name">{{ item.product.name }}</a>
+                    <div class="cart-meta">
+                        {% if item.size %}<span>Size: {{ item.size }}</span>{% endif %}
+                        {% if item.color %}<span>Color: {{ item.color }}</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="cart-price">₹{{ "%.0f"|format(item.product.price) }}</div>
+            <div class="cart-qty">
+                <form action="{{ url_for('update_cart') }}" method="POST" class="qty-form">
+                    <input type="hidden" name="key" value="{{ item.key }}">
+                    <div class="qty-control">
+                        <button type="button" class="qty-btn" onclick="cartQty(this, -1)">−</button>
+                        <input type="number" name="quantity" value="{{ item.quantity }}" min="0" max="99" class="qty-input" onchange="this.form.submit()">
+                        <button type="button" class="qty-btn" onclick="cartQty(this, 1)">+</button>
+                    </div>
+                </form>
+            </div>
+            <div class="cart-subtotal">₹{{ "%.0f"|format(item.subtotal) }}</div>
+            <div class="cart-remove">
+                <a href="{{ url_for('remove_from_cart', key=item.key) }}" class="remove-btn" title="Remove">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="cart-summary">
+        <div class="summary-card">
+            <h3>Order Summary</h3>
+            <div class="summary-row"><span>Subtotal</span><span>₹{{ "%.0f"|format(total) }}</span></div>
+            <div class="summary-row"><span>Shipping</span><span class="free-ship">{% if total >= 999 %}FREE{% else %}₹99{% endif %}</span></div>
+            {% if total < 999 %}<p class="free-ship-note">Add ₹{{ "%.0f"|format(999 - total) }} more for free shipping!</p>{% endif %}
+            <div class="summary-divider"></div>
+            <div class="summary-row summary-total">
+                <span>Total</span>
+                <span>₹{{ "%.0f"|format(total + (0 if total >= 999 else 99)) }}</span>
+            </div>
+            <a href="{{ url_for('checkout') }}" class="btn btn-primary btn-full btn-lg">Proceed to Checkout</a>
+            <a href="{{ url_for('products') }}" class="btn btn-outline btn-full" style="margin-top:.75rem;">Continue Shopping</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state full-width">
+        <i class="fas fa-shopping-bag"></i>
+        <h3>Your cart is empty</h3>
+        <p>Looks like you haven't added anything to your cart yet.</p>
+        <a href="{{ url_for('products') }}" class="btn btn-primary">Start Shopping</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function cartQty(btn, delta) {
+    const form = btn.closest('.qty-form');
+    const input = form.querySelector('.qty-input');
+    let val = parseInt(input.value) + delta;
+    val = Math.max(0, Math.min(99, val));
+    input.value = val;
+    form.submit();
+}
+</script>
+{% endblock %}

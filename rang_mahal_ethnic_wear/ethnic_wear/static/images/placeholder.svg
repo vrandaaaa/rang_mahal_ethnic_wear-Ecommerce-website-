@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="500" viewBox="0 0 400 500">
+  <rect width="400" height="500" fill="#f4dce3"/>
+  <rect x="150" y="180" width="100" height="120" rx="8" fill="#c9748a" opacity="0.3"/>
+  <circle cx="200" cy="160" r="40" fill="#c9748a" opacity="0.25"/>
+  <text x="200" y="340" font-family="Georgia, serif" font-size="18" fill="#a8556b" text-anchor="middle" opacity="0.6">Rang Mahal</text>
+  <text x="200" y="365" font-family="Arial, sans-serif" font-size="12" fill="#c9748a" text-anchor="middle" opacity="0.5">No Image</text>
+  <!-- Decorative motifs -->
+  <text x="80" y="100" font-family="Georgia" font-size="28" fill="#c9748a" opacity="0.15">✦</text>
+  <text x="290" y="430" font-family="Georgia" font-size="28" fill="#c9748a" opacity="0.15">✿</text>
+  <text x="310" y="90" font-family="Georgia" font-size="20" fill="#c9973a" opacity="0.15">❋</text>
+</svg>

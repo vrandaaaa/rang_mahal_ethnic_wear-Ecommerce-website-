@@ -1,0 +1,85 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Orders — Admin{% endblock %}
+{% block page_title %}Orders{% endblock %}
+{% block content %}
+
+<div class="admin-card">
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Update</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                
+                <tr>
+                    <td><strong>{{ order.order_number }}</strong></td>
+                    <td>
+                        <strong>{{ order.user_name }}</strong><br>
+                        <small>{{ order.phone }}</small><br>
+                        <small style="color:#888">{{ order.city }}, {{ order.state }}</small>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-outline" onclick="toggleItems('items-{{ order.id }}')">
+                            View Items
+                        </button>
+                        <div id="items-{{ order.id }}" class="order-items-dropdown" style="display:none">
+                            {% set parsed = order['items'] | from_json %}
+                            {% if parsed %}
+                                {% for item in parsed %}
+                                <div class="order-item-line">
+                                    {{ item.name }} × {{ item.quantity }}
+                                    {% if item.size %}({{ item.size }}){% endif %}
+                                    — ₹{{ "%.0f"|format(item.price * item.quantity) }}
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td><strong>₹{{ "%.0f"|format(order.total_amount) }}</strong></td>
+                    <td>
+                        <span class="status-badge status-{{ order.payment_status }}">
+                            {{ order.payment_status|title }}
+                        </span><br>
+                        <small>{{ order.payment_method|title }}</small>
+                    </td>
+                    <td>
+                        <span class="status-badge status-{{ order.status }}">{{ order.status|title }}</span>
+                    </td>
+                    <td>{{ order.created_at | fmtdate }}</td>
+                    <td>
+                        <form action="{{ url_for('admin_update_order', order_id=order.id) }}" method="POST">
+                            <select name="status" class="form-input form-input-sm" onchange="this.form.submit()">
+                                {% for s in ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled'] %}
+                                <option value="{{ s }}" {% if order.status == s %}selected{% endif %}>{{ s|title }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="no-data">No orders yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script>
+function toggleItems(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

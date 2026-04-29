@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Order Placed! — Rang Mahal{% endblock %}
+{% block content %}
+<div class="container success-container">
+    <div class="success-card">
+        <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+        <h1>Order Placed Successfully! 🎉</h1>
+        <p class="success-order-num">Order #{{ order.order_number }}</p>
+        <p>Thank you for shopping with Rang Mahal! Your order has been confirmed and will be delivered within 5-7 business days.</p>
+        <div class="order-details-mini">
+            <div class="order-mini-row"><span>Total Amount</span><strong>₹{{ "%.0f"|format(order.total_amount) }}</strong></div>
+            <div class="order-mini-row"><span>Payment</span><strong>{{ order.payment_method|title }}</strong></div>
+            <div class="order-mini-row"><span>Status</span><strong class="status-badge status-confirmed">{{ order.status|title }}</strong></div>
+        </div>
+        <div class="success-actions">
+            <a href="{{ url_for('my_orders') }}" class="btn btn-primary">View My Orders</a>
+            <a href="{{ url_for('products') }}" class="btn btn-outline">Continue Shopping</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

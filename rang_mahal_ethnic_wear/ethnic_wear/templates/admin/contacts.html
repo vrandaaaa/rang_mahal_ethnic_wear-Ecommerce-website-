@@ -1,0 +1,33 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Messages — Admin{% endblock %}
+{% block page_title %}Contact Messages{% endblock %}
+{% block content %}
+
+<div class="admin-card">
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr><th>#</th><th>Name</th><th>Email</th><th>Message</th><th>Date</th></tr>
+            </thead>
+            <tbody>
+                {% for c in contacts %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><strong>{{ c.name }}</strong></td>
+                    <td><a href="mailto:{{ c.email }}">{{ c.email }}</a></td>
+                    <td>
+                        <div class="message-preview">{{ c.message[:100] }}{% if c.message|length > 100 %}…
+                            <a href="#" onclick="this.parentElement.innerHTML='{{ c.message|replace("'", "\\'") }}'; return false;">Read more</a>
+                        {% endif %}</div>
+                    </td>
+                    <td>{{ c.created_at | fmtdate }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="5" class="no-data">No messages yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

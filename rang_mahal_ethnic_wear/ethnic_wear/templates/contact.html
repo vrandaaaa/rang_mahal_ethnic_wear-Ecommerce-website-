@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Contact Us — Rang Mahal{% endblock %}
+{% block content %}
+<div class="page-header-slim"><div class="container"><h1>Contact Us</h1></div></div>
+<div class="container contact-layout">
+
+    <div class="contact-info">
+        <div class="contact-intro">
+            <div class="section-tag">We'd love to hear from you</div>
+            <h2>Get in Touch</h2>
+            <p>Have questions about sizing, orders, or our collection? Reach out and our team will get back to you within 24 hours.</p>
+        </div>
+        <div class="contact-cards">
+            <div class="contact-card">
+                <div class="contact-card-icon"><i class="fas fa-phone-alt"></i></div>
+                <h4>Phone</h4>
+                <p>+91 98765 43210</p>
+                <p>Mon–Sat, 10am–7pm</p>
+            </div>
+            <div class="contact-card">
+                <div class="contact-card-icon"><i class="fas fa-envelope"></i></div>
+                <h4>Email</h4>
+                <p>care@rangmahal.com</p>
+                <p>We reply within 24 hrs</p>
+            </div>
+            <div class="contact-card">
+                <div class="contact-card-icon"><i class="fab fa-instagram"></i></div>
+                <h4>Instagram</h4>
+                <p>@rangmahal.official</p>
+                <p>DM for quick help</p>
+            </div>
+            <div class="contact-card">
+                <div class="contact-card-icon"><i class="fab fa-whatsapp"></i></div>
+                <h4>WhatsApp</h4>
+                <p>+91 98765 43210</p>
+                <p>Chat for order queries</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="contact-form-wrap">
+        <h2>Send a Message</h2>
+        <form action="{{ url_for('contact') }}" method="POST" class="contact-form">
+            <div class="form-group">
+                <label class="form-label">Your Name *</label>
+                <input type="text" name="name" required class="form-input" placeholder="e.g. Priya Sharma">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Email Address *</label>
+                <input type="email" name="email" required class="form-input" placeholder="priya@example.com">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Message *</label>
+                <textarea name="message" required class="form-input" rows="5" placeholder="Tell us how we can help you..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-full btn-lg">
+                <i class="fas fa-paper-plane"></i> Send Message
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

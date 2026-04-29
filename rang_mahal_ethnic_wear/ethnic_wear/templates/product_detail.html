@@ -1,0 +1,281 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} — Rang Mahal{% endblock %}
+
+{% block content %}
+<div class="container" style="padding-top:2rem;">
+    <div class="breadcrumb" style="margin-bottom:2rem;">
+        <a href="{{ url_for('home') }}">Home</a> <span>/</span>
+        <a href="{{ url_for('products', category=product.category) }}">{{ product.category }}</a> <span>/</span>
+        <span>{{ product.name }}</span>
+    </div>
+
+    <div class="product-detail-layout">
+
+        <!-- ── Image Gallery ── -->
+        <div class="product-gallery">
+            <div class="gallery-main">
+                {% if product.images_list %}
+                <img src="{{ url_for('static', filename=product.images_list[0].replace('/static/', '')) }}"
+                     alt="{{ product.name }}" class="gallery-main-img" id="mainImage"
+                     onerror="this.src='/static/images/placeholder.svg'">
+                {% else %}
+                <img src="/static/images/placeholder.svg" alt="{{ product.name }}" class="gallery-main-img" id="mainImage">
+                {% endif %}
+                {% if in_wishlist %}
+                <a href="{{ url_for('toggle_wishlist', product_id=product.id) }}" class="gallery-wishlist active" title="Remove from wishlist">
+                    <i class="fas fa-heart"></i>
+                </a>
+                {% elif session.user_id %}
+                <a href="{{ url_for('toggle_wishlist', product_id=product.id) }}" class="gallery-wishlist" title="Add to wishlist">
+                    <i class="far fa-heart"></i>
+                </a>
+                {% endif %}
+            </div>
+            {% if product.images_list|length > 1 %}
+            <div class="gallery-thumbs">
+                {% for img in product.images_list %}
+                <img src="{{ url_for('static', filename=img.replace('/static/', '')) }}"
+                     alt="Thumbnail {{ loop.index }}" class="gallery-thumb {% if loop.first %}active{% endif %}"
+                     onclick="switchImage(this, '{{ url_for('static', filename=img.replace('/static/', '')) }}')"
+                     onerror="this.src='/static/images/placeholder.svg'">
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ── Product Info ── -->
+        <div class="product-detail-info">
+            <div class="product-category-tag">{{ product.category }}</div>
+            <h1 class="product-detail-name">{{ product.name }}</h1>
+
+            <!-- Rating Summary -->
+            <div class="detail-rating">
+                {% set rating = product.avg_rating %}
+                <div class="stars-row">
+                    {% for i in range(1, 6) %}
+                    <i class="fas fa-star {% if i <= rating %}star-filled{% else %}star-empty{% endif %}"></i>
+                    {% endfor %}
+                </div>
+                <span class="rating-val">{{ rating }}</span>
+                <span class="rating-count-detail">({{ reviews|length }} reviews)</span>
+            </div>
+
+            <!-- Price -->
+            <div class="detail-price">
+                <span class="detail-price-current">₹{{ "%.0f"|format(product.price) }}</span>
+                {% if product.original_price and product.original_price > product.price %}
+                <span class="detail-price-original">₹{{ "%.0f"|format(product.original_price) }}</span>
+                <span class="detail-price-save">
+                    Save {{ ((1 - product.price/product.original_price)*100)|int }}%
+                </span>
+                {% endif %}
+            </div>
+
+            <p class="detail-desc">{{ product.description }}</p>
+
+            <!-- Add to Cart Form -->
+            <form action="{{ url_for('add_to_cart') }}" method="POST" class="add-to-cart-form">
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+
+                <!-- Size Selector -->
+                {% if product.sizes_list %}
+                <div class="form-group">
+                    <label class="form-label">Size <a href="#" class="size-guide-link">Size Guide</a></label>
+                    <div class="size-selector">
+                        {% for size in product.sizes_list %}
+                        <label class="size-chip">
+                            <input type="radio" name="size" value="{{ size }}" {% if loop.first %}checked{% endif %}>
+                            <span>{{ size }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Color Selector -->
+                {% if product.colors_list %}
+                <div class="form-group">
+                    <label class="form-label">Color: <span id="selectedColorLabel">{{ product.colors_list[0] }}</span></label>
+                    {% set color_map = {'Red':'#c0392b','Pink':'#e91e8c','Blue':'#2980b9','Green':'#27ae60','Yellow':'#f1c40f','Orange':'#e67e22','Purple':'#8e44ad','White':'#f5f5f5','Black':'#2c2c2c','Gold':'#d4a017','Maroon':'#800000','Teal':'#008080','Peach':'#ffcba4'} %}
+                    <div class="color-selector">
+                        {% for color in product.colors_list %}
+                        <label class="color-chip {% if loop.first %}active{% endif %}" title="{{ color }}"
+                               onclick="document.getElementById('selectedColorLabel').textContent='{{ color }}'">
+                            <input type="radio" name="color" value="{{ color }}" {% if loop.first %}checked{% endif %}>
+                            <span class="color-dot" style="background:{{ color_map.get(color, '#999') }}"></span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Quantity -->
+                <div class="form-group">
+                    <label class="form-label">Quantity</label>
+                    <div class="qty-control">
+                        <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
+                        <input type="number" name="quantity" id="qtyInput" value="1" min="1" max="{{ product.stock }}" class="qty-input">
+                        <button type="button" class="qty-btn" onclick="changeQty(1)">+</button>
+                    </div>
+                    <span class="stock-status {% if product.stock > 10 %}in-stock{% elif product.stock > 0 %}low-stock{% else %}out-stock{% endif %}">
+                        {% if product.stock > 10 %}✓ In Stock
+                        {% elif product.stock > 0 %}⚡ Only {{ product.stock }} left
+                        {% else %}✗ Out of Stock{% endif %}
+                    </span>
+                </div>
+
+                <div class="detail-btns">
+                    <button type="submit" class="btn btn-primary btn-lg btn-full" {% if product.stock == 0 %}disabled{% endif %}>
+                        <i class="fas fa-shopping-bag"></i>
+                        {{ 'Out of Stock' if product.stock == 0 else 'Add to Cart' }}
+                    </button>
+                </div>
+            </form>
+
+            <!-- Trust Badges -->
+            <div class="detail-trust">
+                <div class="trust-badge"><i class="fas fa-shipping-fast"></i><span>Free Delivery over ₹999</span></div>
+                <div class="trust-badge"><i class="fas fa-undo"></i><span>7-day Returns</span></div>
+                <div class="trust-badge"><i class="fas fa-shield-alt"></i><span>Secure Checkout</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Reviews Section ── -->
+    <div class="reviews-section">
+        <div class="reviews-header">
+            <h2>Reviews & Ratings</h2>
+            <div class="reviews-summary">
+                <div class="big-rating">{{ product.avg_rating }}</div>
+                <div>
+                    <div class="stars-row big-stars">
+                        {% for i in range(1, 6) %}
+                        <i class="fas fa-star {% if i <= product.avg_rating %}star-filled{% else %}star-empty{% endif %}"></i>
+                        {% endfor %}
+                    </div>
+                    <span>{{ reviews|length }} reviews</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Write Review -->
+        {% if session.user_id %}
+        <div class="review-form-wrap">
+            <h3>Write a Review</h3>
+            <form action="{{ url_for('add_review', product_id=product.id) }}" method="POST" class="review-form">
+                <div class="star-select" id="starSelect">
+                    {% for i in range(1, 6) %}
+                    <span class="star-pick" data-val="{{ i }}" onclick="setRating({{ i }})">★</span>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="rating" id="ratingInput" value="5">
+                <textarea name="comment" placeholder="Share your experience with this product..." rows="3" class="review-textarea"></textarea>
+                <button type="submit" class="btn btn-primary">Submit Review</button>
+            </form>
+        </div>
+        {% else %}
+        <p class="login-prompt">
+            <a href="{{ url_for('login') }}">Login</a> to write a review.
+        </p>
+        {% endif %}
+
+        <!-- Review List -->
+        <div class="reviews-list">
+            {% for review in reviews %}
+            <div class="review-item">
+                <div class="review-header">
+                    <div class="reviewer-avatar">{{ review.user.name[0].upper() }}</div>
+                    <div>
+                        <div class="reviewer-name">{{ review.user.name }}</div>
+                        <div class="review-stars">
+                            {% for i in range(1, 6) %}
+                            <i class="fas fa-star {% if i <= review.rating %}star-filled{% else %}star-empty{% endif %}"></i>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="review-date">{{ review.created_at | fmtdate }}</div>
+                </div>
+                {% if review.comment %}
+                <p class="review-comment">{{ review.comment }}</p>
+                {% endif %}
+            </div>
+            {% else %}
+            <p class="no-reviews">No reviews yet. Be the first to review!</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- ── Related Products ── -->
+    {% if related %}
+    <div class="related-section">
+        <h2 class="section-title" style="text-align:center; margin-bottom:2rem;">You May Also Like</h2>
+        <div class="product-grid">
+            {% for p in related %}
+            <div class="product-card">
+                <div class="product-img-wrap">
+                    <a href="{{ url_for('product_detail', product_id=p.id) }}">
+                        {% if p.images_list %}
+                        <img src="{{ url_for('static', filename=p.images_list[0].replace('/static/', '')) }}"
+                             alt="{{ p.name }}" class="product-img" onerror="this.src='/static/images/placeholder.svg'">
+                        {% else %}
+                        <img src="/static/images/placeholder.svg" alt="{{ p.name }}" class="product-img">
+                        {% endif %}
+                    </a>
+                </div>
+                <div class="product-info">
+                    <div class="product-category">{{ p.category }}</div>
+                    <h3 class="product-name"><a href="{{ url_for('product_detail', product_id=p.id) }}">{{ p.name }}</a></h3>
+                    <div class="product-price"><span class="price-current">₹{{ "%.0f"|format(p.price) }}</span></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function switchImage(thumb, src) {
+    document.getElementById('mainImage').src = src;
+    document.querySelectorAll('.gallery-thumb').forEach(t => t.classList.remove('active'));
+    thumb.classList.add('active');
+}
+
+function changeQty(delta) {
+    const input = document.getElementById('qtyInput');
+    const max = parseInt(input.max) || 999;
+    let val = parseInt(input.value) + delta;
+    val = Math.max(1, Math.min(max, val));
+    input.value = val;
+}
+
+function setRating(val) {
+    document.getElementById('ratingInput').value = val;
+    document.querySelectorAll('.star-pick').forEach((s, i) => {
+        s.classList.toggle('selected', i < val);
+    });
+}
+
+// Initialize star select
+setRating(5);
+
+// Color chip toggle
+document.querySelectorAll('.color-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+    });
+});
+
+// Size chip toggle
+document.querySelectorAll('.size-chip input').forEach(input => {
+    input.addEventListener('change', () => {
+        document.querySelectorAll('.size-chip').forEach(c => c.classList.remove('active'));
+        input.parentElement.classList.add('active');
+    });
+});
+</script>
+{% endblock %}

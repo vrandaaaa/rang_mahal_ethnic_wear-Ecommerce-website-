@@ -1,0 +1,80 @@
+{% extends "admin/base_admin.html" %}
+{% block title %}Products — Admin{% endblock %}
+{% block page_title %}Products{% endblock %}
+{% block content %}
+
+<div class="admin-card-header" style="margin-bottom:1.5rem;">
+    <div></div>
+    <a href="{{ url_for('admin_add_product') }}" class="btn btn-primary"><i class="fas fa-plus"></i> Add Product</a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-table-wrap">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Featured</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        {% if product.images_list %}
+                        <img src="{{ url_for('static', filename=product.images_list[0].replace('/static/', '')) }}"
+                             alt="{{ product.name }}" class="admin-product-thumb"
+                             onerror="this.src='/static/images/placeholder.svg'">
+                        {% else %}
+                        <img src="/static/images/placeholder.svg" class="admin-product-thumb" alt="">
+                        {% endif %}
+                    </td>
+                    <td>
+                        <strong>{{ product.name }}</strong><br>
+                        <small style="color:#888">ID: {{ product.id }}</small>
+                    </td>
+                    <td><span class="cat-tag">{{ product.category }}</span></td>
+                    <td>
+                        <strong>₹{{ "%.0f"|format(product.price) }}</strong>
+                        {% if product.original_price %}
+                        <br><small style="color:#aaa;text-decoration:line-through;">₹{{ "%.0f"|format(product.original_price) }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="{% if product.stock == 0 %}stock-zero{% elif product.stock < 10 %}stock-low{% else %}stock-ok{% endif %}">
+                            {{ product.stock }}
+                        </span>
+                    </td>
+                    <td>{% if product.is_featured %}<i class="fas fa-star" style="color:#f59e0b"></i>{% else %}<span style="color:#ccc">—</span>{% endif %}</td>
+                    <td>
+                        <span class="status-badge {% if product.is_active %}status-confirmed{% else %}status-cancelled{% endif %}">
+                            {{ 'Active' if product.is_active else 'Inactive' }}
+                        </span>
+                    </td>
+                    <td class="action-btns">
+                        <a href="{{ url_for('admin_edit_product', product_id=product.id) }}" class="btn btn-sm btn-outline" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        <form action="{{ url_for('admin_delete_product', product_id=product.id) }}" method="POST" style="display:inline"
+                              onsubmit="return confirm('Remove this product?')">
+                            <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="8" class="no-data">No products found. <a href="{{ url_for('admin_add_product') }}">Add one!</a></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
