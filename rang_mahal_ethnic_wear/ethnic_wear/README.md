@@ -23,7 +23,7 @@ ethnic_wear/
 │       ├── placeholder.svg         # Default product image
 │       └── uploads/                # Uploaded product images (auto-created)
 └── templates/
-    ├── base.html                   # Base layout (navbar, footer, flash messages)
+    ├── index.html                   # Base layout (navbar, footer, flash messages)
     ├── home.html                   # Homepage (hero, featured, new arrivals)
     ├── products.html               # Product listing with filters & search
     ├── product_detail.html         # Single product page (gallery, reviews)
